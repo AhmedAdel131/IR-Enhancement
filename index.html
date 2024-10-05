@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IR Call Reason</title>
+</head>
+<body >
+    <style>
+body {
+    font-family: Arial, sans-serif;
+    direction: rtl;
+    background-color: #e9e2e6;
+    margin: 0;
+    padding: 0;
+    
+    }
+.container {
+    max-width: 700px;
+    margin: 50px auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+h1 {
+    text-align: center;
+    color: #4a2349;
+}
+form {
+    margin-top: 20px;
+}
+label {
+    display: block;
+    margin: 15px 0 5px;
+    color: #333;
+}
+select, input[type="text"], textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+input[disabled] {
+    background-color: #f0f0f0;
+}
+.btn-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+.btn {
+    background-color: #6b3e6d;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.btn:hover {
+    background-color: #593459;
+}
+.btn-back {
+    background-color: #b6b1b5;
+}
+.btn-back:hover {
+    background-color: #9a9498;
+}
+.error {
+    color: red;
+    font-size: 14px;
+}    
+    </style>
+    <div class="container">
+        <h1>CT Call Reasons </h1>
+        <form id="call-form">
+            <label for="ticket-type">Ticket Type</label>
+            <input type="text" id="ticket-type" value="6" disabled>
+
+            <label for="case-type">Case Type</label>
+            <select id="case-type">
+                <option>Please select</option>
+                <option value="160-closed">الحالة 160 و تم الاغلاق</option>
+                <option value="160-not-closed">الحالة 160 و لم يتم اغلاق الشكوى</option>
+                <option value="173-closed">الحالة 173 و تم الاغلاق</option>
+                <option value="173-not-closed">الحالة 173 و لم يتم اغلاق الشكوى</option>
+                <option>زيارة ثنائية مع الفرع لفحص الراوتر</option>
+                <option value=" Dropped"> Call Dropped</option>
+                <option value=" unclear-Number"> الفنى غير متاكد من الرقم الارضى وسوف يتواصل مرة اخرى </option>
+            </select>
+
+            <label for="case-subtype">Case Sub Type</label>
+            <select id="case-subtype">
+                <option>Please select</option>
+            </select>
+
+            <label for="area-code">Area Code</label>
+            <select id="area-code">
+                <option>Please select</option>
+                <option value="02">02</option>
+                <option value="03">03</option>
+                <option value="04">04</option>
+                <option value="045">045</option>
+                <option value="048">048</option>
+                <option value="050">050</option>
+                <option value="055">055</option>
+                <option value="057">057</option>
+                <option value="064">064</option>
+                <option value="066">066</option>
+                <option value="068">068</option>
+                <option value="065">065</option>
+                <option value="069">069</option>
+                <option value="084">084</option>
+                <option value="088">088</option>
+                <option value="092">092</option>
+                <option value="096">096</option>
+                <option value="097">097</option>
+                <option value="060">060</option>
+                <option value="062">062</option>
+                <option value="082">082</option>
+                <option value="086">086</option>
+                <option value="040">040</option>
+                <option value="068">068</option>
+            </select>
+
+            <label for="dsl-number">DSL Number</label>
+            <input type="text" id="dsl-number" required>
+            <span id="error-message" class="error"></span>
+
+            <label for="status">Status</label>
+            <select id="status">
+                <option>Please select</option>
+                <option value="technician-error">خطأ من جانب الفني</option>
+                <option value="no-error">لا يوجد خطأ من جانب الفني</option>
+            </select>
+
+            <label for="status-reason">Status Reason</label>
+            <select id="status-reason">
+                <option>Please select</option>
+            </select>
+
+            <label for="technician-id">Technician ID</label>
+            <input type="text" pattern="\d{4}|\d{5}|\d{6}|\d{7}" title="يرجى ادخال 4 او 5 او 6 او 7 ارقام الخاصة بالرقم الوظيفى للفنى فقط" required>
+
+
+            <label for="comment">Comment</label>
+            <textarea id="comment" rows="4"></textarea>
+
+            <div class="btn-container">
+                <button type="submit" class="btn">Save</button>
+                <button type="button" class="btn btn-back">Back to list</button>
+            </div>
+
+               </form>
+    </div>
+    <span id="validation-message" class="error" style="color: red;"></span> <!-- رسالة التحقق -->   
+    <script>
+        document.getElementById('call-form').addEventListener('submit', function(event) {
+            var areaCode = document.getElementById('area-code').value;
+            var dslNumber = document.getElementById('dsl-number').value;
+            var caseType = document.getElementById('case-type').value;
+            var status = document.getElementById('status').value;
+            var technicianCheck = document.getElementById('status-reason').value; // حالة الفني
+            var errorMessage = document.getElementById('error-message');
+            var validationMessage = document.getElementById('validation-message'); // رسالة التحقق
+            
+            // مسح الرسائل السابقة
+            errorMessage.textContent = '';
+            validationMessage.textContent = '';
+
+            // التحقق من عدد الأرقام حسب المحافظة
+            if (areaCode === '02') {
+                if (dslNumber.length !== 8) {
+                    errorMessage.textContent = 'رقم DSL لمحافظة القاهرة يجب أن يكون 8 أرقام';
+                    event.preventDefault(); // منع إرسال النموذج
+                    return; // الخروج من الدالة
+                }
+            } else {
+                if (dslNumber.length !== 7) {
+                    errorMessage.textContent = 'رقم DSL يجب أن يكون 7 أرقام لباقي المحافظات';
+                    event.preventDefault(); // منع إرسال النموذج
+                    return; // الخروج من الدالة
+                }
+            }
+
+            // التحقق من الشروط الخاصة بالحالة 173
+            if (caseType.startsWith('173') && status === 'technician-error' && technicianCheck === 'الفنى لم يقم بفحص الخط عن طريق التابلت قبل مكالمة الدعم') {
+                validationMessage.textContent = 'Wrong Validation: لا يمكن اختيار "الفني لم يقم بفحص الخط عن طريق التابلت" في حالة 173 مغلقة أو غير مغلقة'; // عرض رسالة الخطأ
+                event.preventDefault(); // منع إرسال النموذج
+            }
+        });
+
+        // Case Type change event
+        document.getElementById('case-type').addEventListener('change', function() {
+            var caseType = this.value;
+            var caseSubType = document.getElementById('case-subtype');
+
+            // Clear previous options
+            caseSubType.innerHTML = '<option>Please select</option>';
+
+            // Add Case Sub Type options based on Case Type
+            if (caseType === '160-closed') {
+                var options = [
+                    'العميل اجل الزيارة',
+                    'شبكة / وصلات داخلية او مجتمعات مغلقة',
+                    'العميل رفض الزيارة',
+                    'مشكلة فواتير / مرفوع من الخدمة / موقوف',
+                    'مشكلة صواعد',
+                    'مشكلة راوتر عميل',
+                 'العميل لا يرد',
+                    'سكسيس كود و يوجد كول سبورت',
+                    'لايوجد بيانات علي WFM',
+                    'يوجد Ready Assign علي WFM',
+                    'الفني ليس لديه تابلت وبيتكلم من نفس الرقم',
+                    'سكسيس كود و يوجد مشكلة عامة فى التابلت',
+                    'شكوى صوت على الحالة 160 والعميل غير مشترك داتا',
+                    'تم تحويل الخط الى FTTH'
+                ];
+
+                options.forEach(function(option) {
+                    var opt = document.createElement('option');
+                    opt.value = option;
+                    opt.textContent = option;
+                    caseSubType.appendChild(opt);
+                });
+            }
+
+            if (caseType === '160-not-closed') {
+                var options = [
+                    'الفني بيسأل على حاجة فى التكت',
+                    'تسجيل قرايه بوكس',
+                    'لم يتم اسناد الشكوي للفني على WFM',
+                    'تسجيل قرايه و لا يوجد كول سبورت في الحالة 160',
+                    'شكوي ابديت بورت او رفع سرعه',
+                    'شكوي بالحاله 160 كود success ولا يوجد كول سبورت',
+                    'مشكلة انتجريشن ولا يوجد شكوي TTS',
+                    'شكوي تخص اعطال الصوت وغير موجوده ع TTS',
+                    'مشكله FTTH و اختيار خاطئ من الفني على الرسالة الصوتية IVR',
+                    'الفني طلب الغلق و بعد الفحص لا يوجد مشكله ( سوف يغلق من التابلت )',
+                    'مازال يوجد عطل على الخط',
+                    'أعطال تغلق عن طريق الايميل',
+                    'الفني طلب الغلق مشكلة راوتر و بعد الفحص وجد انها ليست مشكلة راوتر',
+                    'الفني طلب الغلق رافض او لا يرد وبعد التواصل مع العميل وجود عكس ذلك',
+                    'مشكلة راوتر وتم الفحص فى الفرع و ما زالت المشكلة مستمرة'
+                ];
+
+                options.forEach(function(option) {
+                    var opt = document.createElement('option');
+                    opt.value = option;
+                    opt.textContent = option;
+                    caseSubType.appendChild(opt);
+                });
+            }
+
+
+            if (caseType === '173-closed') {
+                var options = [
+                    'شكوى محلولة سكسيس كود',
+                    'العميل غير متواجد',
+                    'شبكة / وصلات داخلية او مجتمعات مغلقة',
+                    'العميل رفض الزيارة',
+                    'العميل اجل الزيارة',
+                    'مشكلة فواتير / مرفوع من الخدمة / موقوف',
+                    'مطلوب تعديل عنوان و يوجد طلب نقل علي OSS',
+                    'مشكلة صواعد',
+                    'مشكلة راوتر عميل',
+                    'العميل لا يرد',
+                    'الفني لم يقم بفحص الخط عن طريق التابلت قبل مكالمة الدعم'
+                ];
+
+                options.forEach(function(option) {
+                    var opt = document.createElement('option');
+                    opt.value = option;
+                    opt.textContent = option;
+                    caseSubType.appendChild(opt);
+                });
+            }
+
+            if (caseType === '173-not-closed') {
+                var options = [
+                    'الفني بيسأل على حاجة فى التكت',
+                    'مازال يوجد عطل على الخط',
+                    'شكوي ابديت بورت او رفع سرعه',
+                    'مشكلة انتجريشن ولا يوجد شكوي TTS',
+                    'شكوي تخص اعطال الصوت و غير موجودة علي TTS',
+                    'الفنى طلب الغلق رافض او لا يرد وبعد التواصل مع العميل وجود عكس ذلك',
+                     ' الفنى طلب الغلق مشكلة راوتر وبعد الفحص وجد عكس ذلك',
+                       ' لم يتم اسناد الشكوى على كود الفنى ',
+                     'تسجيل قرايه'
+                ];
+
+                options.forEach(function(option) {
+                    var opt = document.createElement('option');
+                    opt.value = option;
+                    opt.textContent = option;
+                    caseSubType.appendChild(opt);
+                });
+            }
+        });
+        // Status change event
+        document.getElementById('status').addEventListener('change', function() {
+            var status = this.value;
+            var statusReason = document.getElementById('status-reason');
+
+            // Clear previous options
+            statusReason.innerHTML = '<option>Please select</option>';
+
+            // Add Status Reason options based on Status
+            if (status === 'technician-error') {
+                var options = [
+                    'الفنى طلب الغلق لايرد وبعد التواصل مع العميل رد على الدعم ',
+                    'الفنى يطلب الغلق وهو ليس بمكان الخدمة ',
+                    'الفنى يتحدث باسلوب غير لائق مع الموظف',
+                    'الفنى بيقول قايم بوكس وهو واقف على الكابينة ',
+                    ' الفنى بيتكلم من رقم ارضى غير ارضى العميل',
+                'الفنى لم يقم بفحص الخط عن طريق التابلت قبل مكالمة الدعم',
+                    'لم يتم اسناد الشكوى للفنى على wfm',
+                    ' الفنى طلب الغلق سكسيس كود براوتر اخر غير راوتر العميل ',
+                    ' الفنى يفحص الشكوى براوتر non we',
+                    'الفنى عاكس راوتر خط تانى على خط العميل صاحب الشكوى ',
+                    'الفنى مغير لاين كود الراوتر لadsl ',
+                    ' الفنى طلب الغلق رافض وبعد متابعة العميل طلب اجراء زيارة ',
+                    'الفنى طلب الغلق رافض فى حين افاد العميل بانه قد تمت الزيارة بالفعل ',
+                    'الفني طلب الغلق مشكلة راوتر و بعد الفحص وجد انها ليست مشكلة راوتر'
+                    
+                ];
+            }
+            options.forEach(function(option) {
+                    var opt = document.createElement('option');
+                    opt.value = option;
+                    opt.textContent = option;
+                    statusReason.appendChild(opt);
+                });
+                
+            }
+        );
+    </script>  
+</body>
+</html>
